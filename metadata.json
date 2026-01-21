@@ -1,0 +1,5 @@
+{
+  "name": "SHS Admission Management Pro",
+  "description": "A high-performance, offline-first admission management system for Senior High Schools featuring role-based workflows, real-time analytics, and persistent data storage.",
+  "requestFramePermissions": []
+}
