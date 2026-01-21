@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Student } from '../types';
-import { FileText, DollarSign, Database, CheckCircle, TrendingUp, GraduationCap, Fingerprint } from 'lucide-react';
+import { FileText, DollarSign, Database, CheckCircle, TrendingUp, GraduationCap, Fingerprint, Sparkles, BrainCircuit, RefreshCw } from 'lucide-react';
 import { StatusIcon } from './StatusBadge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { generateAdmissionsIntelligence } from '../services/aiService';
 
 interface DashboardProps {
   students: Student[];
@@ -11,6 +12,9 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ students, totalRevenue }) => {
+  const [aiInsights, setAiInsights] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const total = students.length;
   const stats = [
     { label: 'Cheat Issued', count: students.filter(s => s.cheat === 'completed').length, color: 'blue', icon: FileText },
@@ -24,23 +28,74 @@ const Dashboard: React.FC<DashboardProps> = ({ students, totalRevenue }) => {
   const chartData = stats.map(s => ({ name: s.label.split(' ')[0], value: s.count }));
   const COLORS = ['#3b82f6', '#10b981', '#a855f7', '#f97316', '#06b6d4', '#ec4899'];
 
+  const fetchAiInsights = async () => {
+    setIsGenerating(true);
+    const insights = await generateAdmissionsIntelligence(students, totalRevenue);
+    setAiInsights(insights);
+    setIsGenerating(false);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-slate-800 tracking-tight">System Overview</h2>
-          <p className="text-slate-500">Managing {total} active applicants across 6 workflow stages</p>
+          <h2 className="text-3xl font-bold text-slate-800 tracking-tight">System Intelligence</h2>
+          <p className="text-slate-500">Live analytics for {total} synchronized student records</p>
         </div>
         <div className="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm border border-slate-200">
           <div className="bg-emerald-100 p-2 rounded-lg">
             <TrendingUp className="w-5 h-5 text-emerald-600" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Revenue</p>
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Cloud Revenue</p>
             <p className="text-xl font-bold text-slate-900">GH₵ {totalRevenue.toLocaleString()}</p>
           </div>
         </div>
       </header>
+
+      {/* AI Intelligence Section */}
+      <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 rounded-[2rem] p-8 text-white shadow-2xl shadow-blue-200 overflow-hidden relative group">
+        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
+          <BrainCircuit className="w-48 h-48" />
+        </div>
+        
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          <div className="max-w-xl">
+             <div className="flex items-center gap-2 mb-4">
+                <div className="bg-white/20 p-2 rounded-lg backdrop-blur-md">
+                   <Sparkles className="w-5 h-5 text-yellow-300" />
+                </div>
+                <span className="text-sm font-black uppercase tracking-[0.2em] text-blue-100">Gemini Cloud Intelligence</span>
+             </div>
+             <h3 className="text-3xl font-black mb-4 tracking-tight">Executive Admissions Insight</h3>
+             <p className="text-blue-50 text-lg opacity-80 leading-relaxed">
+               Leverage AI to analyze bottlenecks, predict enrollment outcomes, and optimize school revenue streams.
+             </p>
+          </div>
+          
+          <button 
+            onClick={fetchAiInsights}
+            disabled={isGenerating}
+            className="self-start lg:self-center bg-white text-blue-700 px-8 py-4 rounded-2xl font-black shadow-xl hover:bg-blue-50 transition-all active:scale-95 flex items-center gap-3 disabled:opacity-50"
+          >
+            {isGenerating ? <RefreshCw className="w-5 h-5 animate-spin" /> : <BrainCircuit className="w-5 h-5" />}
+            {isGenerating ? 'ANALYZING...' : 'GENERATE INSIGHTS'}
+          </button>
+        </div>
+
+        {aiInsights && (
+          <div className="mt-8 bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-8 animate-in slide-in-from-top-4 duration-500">
+            <h4 className="font-black text-sm uppercase tracking-widest text-blue-200 mb-6 flex items-center gap-2">
+              <Sparkles className="w-4 h-4" /> AI Summary Report
+            </h4>
+            <div className="prose prose-invert max-w-none text-blue-50">
+              <p className="whitespace-pre-wrap leading-relaxed">
+                {aiInsights}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {stats.map((stat, idx) => (
@@ -65,7 +120,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, totalRevenue }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-          <h3 className="text-lg font-bold text-slate-800 mb-6">Workflow Saturation</h3>
+          <h3 className="text-lg font-bold text-slate-800 mb-6">Real-time Cycle Progress</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
@@ -87,7 +142,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students, totalRevenue }) => {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col justify-center">
-          <h3 className="text-lg font-bold text-slate-800 mb-4">Outcome Distribution</h3>
+          <h3 className="text-lg font-bold text-slate-800 mb-4">Admissions Outlook</h3>
           <div className="h-[200px]">
              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -124,70 +179,6 @@ const Dashboard: React.FC<DashboardProps> = ({ students, totalRevenue }) => {
               <p className="text-lg font-black">{students.filter(s => s.rectorReview === 'failed').length}</p>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-slate-800">Master Admission Ledger</h3>
-          <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-black">LATEST 10</span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50/50">
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Student Info</th>
-                <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Stage 1-3</th>
-                <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Stage 4-6</th>
-                <th className="px-6 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Completion</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {students.slice(-10).reverse().map(student => {
-                const steps = [student.cheat, student.form, student.payment, student.bioData, student.transcript, student.rectorReview];
-                const completedCount = steps.filter(s => s === 'completed').length;
-                return (
-                  <tr key={student.id} className="hover:bg-slate-50/80 transition-colors group">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm ${student.gender === 'Male' ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-600'}`}>
-                          {student.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-900 leading-none">{student.name}</p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">{student.class}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-4">
-                        <div title="Cheat"><StatusIcon status={student.cheat} /></div>
-                        <div title="Form"><StatusIcon status={student.form} /></div>
-                        <div title="Payment"><StatusIcon status={student.payment} /></div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-4">
-                        <div title="Bio-Data"><StatusIcon status={student.bioData} /></div>
-                        <div title="Transcript"><StatusIcon status={student.transcript} /></div>
-                        <div title="Rector"><StatusIcon status={student.rectorReview} /></div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                       <div className="flex flex-col items-end">
-                         <span className={`text-sm font-black ${completedCount === 6 ? 'text-emerald-600' : 'text-slate-800'}`}>
-                           {completedCount}/6 Stages
-                         </span>
-                         <div className="w-20 bg-slate-100 h-1 rounded-full mt-1 overflow-hidden">
-                           <div className="bg-emerald-500 h-full" style={{ width: `${(completedCount/6)*100}%` }} />
-                         </div>
-                       </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
